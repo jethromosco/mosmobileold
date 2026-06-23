@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/category_map.dart';
+import '../constants/app_colors.dart';
 import '../db/db_helper.dart';
 import '../models/product.dart';
 import '../models/transaction_entry.dart';
@@ -7,11 +8,13 @@ import '../models/transaction_entry.dart';
 class ActionScreen extends StatefulWidget {
   final Product product;
   final String category;
+  final String unit;
 
   const ActionScreen({
     super.key,
     required this.product,
     required this.category,
+    required this.unit,
   });
 
   @override
@@ -40,7 +43,7 @@ class _ActionScreenState extends State<ActionScreen> {
   }
 
   Future<void> _loadProductData() async {
-    final dbFileName = categoryDbMap[widget.category] ?? '';
+    final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
     debugPrint('[ACTION] Loading data for product: ${widget.product.displayName}');
     debugPrint('[ACTION] product.id=${widget.product.id}');
     debugPrint('[ACTION] product.innerDiameter=${widget.product.innerDiameter}');
@@ -61,9 +64,9 @@ class _ActionScreenState extends State<ActionScreen> {
   }
 
   Color _stockColor(int stock) {
-    if (stock <= 0) return const Color(0xFFE53935); // red = out of stock
-    if (stock <= 5) return const Color(0xFFFFA726); // orange = low
-    return const Color(0xFF66BB6A); // green = good
+    if (stock <= 0) return AppColors.stockEmpty; // red = out of stock
+    if (stock <= 5) return AppColors.stockLow; // orange = low
+    return AppColors.stockGood; // green = good
   }
 
   Future<void> _confirmReset() async {
@@ -71,11 +74,11 @@ class _ActionScreenState extends State<ActionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: AppColors.surfaceBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Color(0xFFE53935), size: 28),
+            Icon(Icons.warning_amber_rounded, color: AppColors.primary, size: 28),
             SizedBox(width: 10),
             Text(
               'Reset Stock?',
@@ -104,20 +107,20 @@ class _ActionScreenState extends State<ActionScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color(0xFFE53935).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, color: Color(0xFFE53935), size: 16),
+                  Icon(Icons.info_outline, color: AppColors.primary, size: 16),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Current stock will be lost.',
-                      style: TextStyle(color: Color(0xFFE53935), fontSize: 12),
+                      style: TextStyle(color: AppColors.primary, fontSize: 12),
                     ),
                   ),
                 ],
@@ -135,7 +138,7 @@ class _ActionScreenState extends State<ActionScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE53935),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -170,9 +173,9 @@ class _ActionScreenState extends State<ActionScreen> {
       final entry = TransactionEntry(
         date: dateStr,
         productType: widget.product.type, // e.g., "TC"
-        idSize: widget.product.innerDiameter.toString(),
-        odSize: widget.product.outerDiameter.toString(),
-        thSize: widget.product.thickness.toString(),
+        idSize: widget.product.innerDiameter,
+        odSize: widget.product.outerDiameter,
+        thSize: widget.product.thickness,
         brand: widget.product.brand,
         productName: notes, // "ACTUAL" or "RESET" goes in name column
         quantity: quantity,
@@ -182,7 +185,7 @@ class _ActionScreenState extends State<ActionScreen> {
       );
       debugPrint('[ACTION] Created entry with notes: ${entry.notes}');
 
-      final dbFileName = categoryDbMap[widget.category] ?? '';
+      final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
       final saved = await _dbHelper.saveTransaction(dbFileName, entry);
 
       if (!mounted) return;
@@ -210,7 +213,7 @@ class _ActionScreenState extends State<ActionScreen> {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
-              backgroundColor: const Color(0xFF1A1A1A),
+              backgroundColor: AppColors.surfaceBackground,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -268,7 +271,7 @@ class _ActionScreenState extends State<ActionScreen> {
 
   Future<void> _exportDatabase() async {
     try {
-      final dbFileName = categoryDbMap[widget.category];
+      final dbFileName = resolveDbFileName(widget.category, widget.unit);
       if (dbFileName == null) return;
       await _dbHelper.exportDb(dbFileName);
       debugPrint('[DB] File exported: $dbFileName');
@@ -300,12 +303,12 @@ class _ActionScreenState extends State<ActionScreen> {
         title: const Text('Stock Action'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: AppColors.surfaceBackground,
       ),
       body: _isLoadingData
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(Color(0xFFE53935)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             )
           : SingleChildScrollView(
@@ -431,7 +434,7 @@ class _ActionScreenState extends State<ActionScreen> {
                         ),
                         contentPadding: const EdgeInsets.all(16),
                         filled: true,
-                        fillColor: const Color(0xFF1A1A1A),
+                        fillColor: AppColors.surfaceBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
@@ -457,7 +460,7 @@ class _ActionScreenState extends State<ActionScreen> {
                             ? IconButton(
                                 icon: const Icon(
                                   Icons.clear,
-                                  color: Color(0xFFE53935),
+                                  color: AppColors.primary,
                                 ),
                                 onPressed: () {
                                   _actualCountController.clear();
@@ -498,7 +501,7 @@ class _ActionScreenState extends State<ActionScreen> {
                                 _saveTransaction(quantity, true);
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE53935),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: Colors.grey[700],
                           shape: RoundedRectangleBorder(
@@ -536,7 +539,7 @@ class _ActionScreenState extends State<ActionScreen> {
                       child: OutlinedButton(
                         onPressed: _isSaving ? null : _confirmReset,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFE53935),
+                          foregroundColor: AppColors.primary,
                           side: const BorderSide(
                             color: Color(0xFFE53935),
                             width: 2,
@@ -553,7 +556,7 @@ class _ActionScreenState extends State<ActionScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation(
-                                    Color(0xFFE53935),
+                                    AppColors.primary,
                                   ),
                                 ),
                               )

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/category_map.dart';
+import '../constants/app_colors.dart';
 import '../db/db_helper.dart';
 import '../models/product.dart';
 import '../models/transaction_entry.dart';
@@ -7,11 +8,13 @@ import '../models/transaction_entry.dart';
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
   final String category;
+  final String unit;
 
   const ProductDetailScreen({
     super.key,
     required this.product,
     required this.category,
+    required this.unit,
   });
 
   @override
@@ -40,7 +43,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _loadProductData() async {
-    final dbFileName = categoryDbMap[widget.category] ?? '';
+    final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
     debugPrint('[PRODUCT_DETAIL] Loading data for product: ${widget.product.displayName}');
     debugPrint('[PRODUCT_DETAIL] product.id=${widget.product.id}');
     debugPrint('[PRODUCT_DETAIL] product.innerDiameter=${widget.product.innerDiameter}');
@@ -61,9 +64,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Color _stockColor(int stock) {
-    if (stock <= 0) return const Color(0xFFE53935); // red = out of stock
-    if (stock <= 5) return const Color(0xFFFFA726); // orange = low
-    return const Color(0xFF66BB6A); // green = good
+    if (stock <= 0) return AppColors.stockEmpty; // red = out of stock
+    if (stock <= 5) return AppColors.stockLow; // orange = low
+    return AppColors.stockGood; // green = good
   }
 
   Future<void> _confirmReset() async {
@@ -71,11 +74,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: AppColors.surfaceBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Color(0xFFE53935), size: 28),
+            Icon(Icons.warning_amber_rounded, color: AppColors.primary, size: 28),
             SizedBox(width: 10),
             Text(
               'Reset Stock?',
@@ -104,20 +107,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color(0xFFE53935).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline, color: Color(0xFFE53935), size: 16),
+                  Icon(Icons.info_outline, color: AppColors.primary, size: 16),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Current stock will be lost.',
-                      style: TextStyle(color: Color(0xFFE53935), fontSize: 12),
+                      style: TextStyle(color: AppColors.primary, fontSize: 12),
                     ),
                   ),
                 ],
@@ -135,7 +138,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE53935),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -170,9 +173,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       final entry = TransactionEntry(
         date: dateStr,
         productType: widget.product.type, // e.g., "TC"
-        idSize: widget.product.innerDiameter.toString(),
-        odSize: widget.product.outerDiameter.toString(),
-        thSize: widget.product.thickness.toString(),
+        idSize: widget.product.innerDiameter,
+        odSize: widget.product.outerDiameter,
+        thSize: widget.product.thickness,
         brand: widget.product.brand,
         productName: notes, // "ACTUAL" or "RESET" goes in name column
         quantity: quantity,
@@ -182,7 +185,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
       debugPrint('[ACTION] Created entry with notes: ${entry.notes}');
 
-      final dbFileName = categoryDbMap[widget.category] ?? '';
+      final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
       final saved = await _dbHelper.saveTransaction(dbFileName, entry);
 
       if (!mounted) return;
@@ -210,7 +213,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
-              backgroundColor: const Color(0xFF1A1A1A),
+              backgroundColor: AppColors.surfaceBackground,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -232,7 +235,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE53935),
+                    backgroundColor: AppColors.primary,
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
@@ -268,7 +271,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _exportDatabase() async {
     try {
-      final dbFileName = categoryDbMap[widget.category];
+      final dbFileName = resolveDbFileName(widget.category, widget.unit);
       if (dbFileName == null) return;
       await _dbHelper.exportDb(dbFileName);
       debugPrint('[DB] File exported: $dbFileName');
@@ -302,7 +305,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: AppColors.surfaceBackground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -324,7 +327,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE53935),
+              backgroundColor: AppColors.primary,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Clear'),
@@ -369,12 +372,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         title: const Text('Product Detail'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: AppColors.surfaceBackground,
       ),
       body: _isLoadingData
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(Color(0xFFE53935)),
+                valueColor: AlwaysStoppedAnimation(AppColors.primary),
               ),
             )
           : SingleChildScrollView(
@@ -402,7 +405,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         horizontal: 20,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
+                        color: AppColors.surfaceBackground,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: _stockColor(_currentStock),
@@ -447,7 +450,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         horizontal: 20,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
+                        color: AppColors.surfaceBackground,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white12),
                       ),
@@ -500,7 +503,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                         contentPadding: const EdgeInsets.all(16),
                         filled: true,
-                        fillColor: const Color(0xFF1A1A1A),
+                        fillColor: AppColors.surfaceBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
@@ -511,7 +514,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE53935),
+                            color: AppColors.primary,
                             width: 2,
                           ),
                         ),
@@ -526,7 +529,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ? IconButton(
                                 icon: const Icon(
                                   Icons.clear,
-                                  color: Color(0xFFE53935),
+                                  color: AppColors.primary,
                                 ),
                                 onPressed: () {
                                   _actualCountController.clear();
@@ -567,7 +570,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 _saveTransaction(quantity, true);
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE53935),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: Colors.grey[700],
                           shape: RoundedRectangleBorder(
@@ -605,9 +608,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: OutlinedButton(
                         onPressed: _isSaving ? null : _confirmReset,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFE53935),
+                          foregroundColor: AppColors.primary,
                           side: const BorderSide(
-                            color: Color(0xFFE53935),
+                            color: AppColors.primary,
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
@@ -622,7 +625,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation(
-                                    Color(0xFFE53935),
+                                    AppColors.primary,
                                   ),
                                 ),
                               )

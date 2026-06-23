@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 
 class Product {
   final int id;
-  final double innerDiameter;
-  final double outerDiameter;
-  final double thickness;
+  final String innerDiameter;
+  final String outerDiameter;
+  final String thickness;
   final String type;
   final String brand;
 
@@ -18,11 +18,9 @@ class Product {
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
-    double parseNum(dynamic val) {
-      if (val == null) return 0.0;
-      if (val is double) return val;
-      if (val is int) return val.toDouble();
-      return double.tryParse(val.toString()) ?? 0.0;
+    String parseSize(dynamic val) {
+      if (val == null) return '0';
+      return val.toString().trim();
     }
     
     final rowId = map['rowid'] ?? map['_id'] ?? 0;
@@ -30,9 +28,9 @@ class Product {
     
     return Product(
       id: rowId,
-      innerDiameter: parseNum(map['id']),
-      outerDiameter: parseNum(map['od']),
-      thickness: parseNum(map['thk']),
+      innerDiameter: parseSize(map['id']),
+      outerDiameter: parseSize(map['od']),
+      thickness: parseSize(map['thk']),
       type: map['type']?.toString() ?? '',
       brand: map['brand']?.toString() ?? '',
     );
@@ -44,11 +42,9 @@ class Product {
     required String odCol,
     required String thkCol,
   }) {
-    double parseNum(dynamic val) {
-      if (val == null) return 0.0;
-      if (val is double) return val;
-      if (val is int) return val.toDouble();
-      return double.tryParse(val.toString()) ?? 0.0;
+    String parseSize(dynamic val) {
+      if (val == null) return '0';
+      return val.toString().trim();
     }
 
     // Use rowid as primary key to avoid conflict with 'id' dimension column
@@ -56,21 +52,13 @@ class Product {
 
     return Product(
       id: primaryKey is int ? primaryKey : int.tryParse(primaryKey.toString()) ?? 0,
-      innerDiameter: parseNum(map[idCol]),
-      outerDiameter: parseNum(map[odCol]),
-      thickness: parseNum(map[thkCol]),
+      innerDiameter: parseSize(map[idCol]),
+      outerDiameter: parseSize(map[odCol]),
+      thickness: parseSize(map[thkCol]),
       type: map['type']?.toString() ?? map['seal_type']?.toString() ?? '',
       brand: map['brand']?.toString() ?? map['manufacturer']?.toString() ?? '',
     );
   }
 
-  /// Formats a dimension value by removing unnecessary .0 decimals
-  String _formatDimension(double value) {
-    if (value == value.toInt()) {
-      return value.toInt().toString();
-    }
-    return value.toString();
-  }
-
-  String get displayName => '$type ${_formatDimension(innerDiameter)}-${_formatDimension(outerDiameter)}-${_formatDimension(thickness)} $brand';
+  String get displayName => '$type $innerDiameter-$outerDiameter-$thickness $brand';
 }

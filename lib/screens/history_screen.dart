@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/category_map.dart';
+import '../constants/app_colors.dart';
 import '../db/db_helper.dart';
 
 class HistoryScreen extends StatefulWidget {
   final String category;
+  final String unit;
 
   const HistoryScreen({
     super.key,
     required this.category,
+    required this.unit,
   });
 
   @override
@@ -61,7 +64,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() => _isLoading = true);
     try {
-      final dbFileName = categoryDbMap[widget.category] ?? '';
+      final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
       if (dbFileName.isEmpty) {
         debugPrint('[HISTORY] Invalid category: ${widget.category}');
         return;
@@ -219,7 +222,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                     // Determine if ACTUAL or RESET and get appropriate color
                     final isActual = name == 'ACTUAL';
-                    final accentColor = isActual ? const Color(0xFF66BB6A) : const Color(0xFFE53935);
+                    final accentColor = isActual ? AppColors.stockGood : AppColors.primary;
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import '../constants/category_map.dart';
+import '../constants/app_colors.dart';
 import '../db/db_helper.dart';
 import '../models/product.dart';
 import '../widgets/search_result_tile.dart';
@@ -51,7 +52,7 @@ class _SearchScreenState extends State<SearchScreen> {
       });
       return;
     }
-    final dbFileName = categoryDbMap[widget.category] ?? '';
+    final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
     final exists = await _dbHelper.dbExists(dbFileName);
     setState(() {
       _dbExists = exists;
@@ -93,7 +94,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _isLoading = true;
     });
 
-    final dbFileName = categoryDbMap[widget.category] ?? '';
+    final dbFileName = resolveDbFileName(widget.category, widget.unit) ?? '';
     final results = await _dbHelper.searchProducts(dbFileName, rawInput);
 
     if (!mounted) return;
@@ -118,7 +119,10 @@ class _SearchScreenState extends State<SearchScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => HistoryScreen(category: widget.category),
+                  builder: (_) => HistoryScreen(
+                    category: widget.category,
+                    unit: widget.unit,
+                  ),
                 ),
               );
             },
@@ -130,7 +134,10 @@ class _SearchScreenState extends State<SearchScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => DiagnosticScreen(category: widget.category),
+                  builder: (_) => DiagnosticScreen(
+                    category: widget.category,
+                    unit: widget.unit,
+                  ),
                 ),
               );
             },
@@ -190,15 +197,15 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'e.g. 30-47-7 or TC 30 x 47 x 7 NOK',
-                      hintStyle: const TextStyle(color: Color(0xFF777777)),
+                      hintStyle: const TextStyle(color: AppColors.textMuted),
                       prefixIcon: const Icon(
                         Icons.search,
-                        color: Color(0xFFE53935),
+                        color: AppColors.primary,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear,
-                                  color: Color(0xFFE53935)),
+                                  color: AppColors.primary),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() => _searchResults = []);
@@ -206,25 +213,25 @@ class _SearchScreenState extends State<SearchScreen> {
                             )
                           : null,
                       filled: true,
-                      fillColor: const Color(0xFF1A1A1A),
+                      fillColor: AppColors.surfaceBackground,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: const BorderSide(
-                          color: Color(0xFF2C2C2C),
+                          color: AppColors.borderInactive,
                           width: 1,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: const BorderSide(
-                          color: Color(0xFF2C2C2C),
+                          color: AppColors.borderInactive,
                           width: 1,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: const BorderSide(
-                          color: Color(0xFFE53935),
+                          color: AppColors.primary,
                           width: 2,
                         ),
                       ),
@@ -238,7 +245,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ? const Center(
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFFE53935),
+                              AppColors.primary,
                             ),
                           ),
                         )
@@ -285,7 +292,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               itemBuilder: (context, index) {
                                 final product = _searchResults[index];
                                 return SearchResultTile(
-                                  code: '${product.type} ${product.innerDiameter.toStringAsFixed(1).replaceAll('.0', '')}-${product.outerDiameter.toStringAsFixed(1).replaceAll('.0', '')}-${product.thickness.toStringAsFixed(1).replaceAll('.0', '')}',
+                                  code: '${product.type} ${product.innerDiameter}-${product.outerDiameter}-${product.thickness}',
                                   brand: product.brand,
                                   onTap: () {
                                     Navigator.push(
@@ -295,6 +302,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                             ProductDetailScreen(
                                           product: product,
                                           category: widget.category,
+                                          unit: widget.unit,
                                         ),
                                       ),
                                     );
@@ -333,7 +341,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
 
       // Validate filename matches current category's db
-      final expectedDbName = categoryDbMap[widget.category];
+      final expectedDbName = resolveDbFileName(widget.category, widget.unit);
       if (expectedDbName != pickedFile.name) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -449,7 +457,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _exportDatabase() async {
     try {
-      final dbFileName = categoryDbMap[widget.category];
+      final dbFileName = resolveDbFileName(widget.category, widget.unit);
       if (dbFileName == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

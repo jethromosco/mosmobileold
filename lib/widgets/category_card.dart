@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// Modern category card with icon, emoji, and red accent styling
+/// Modern category card with emoji and red accent styling
 class CategoryCard extends StatelessWidget {
   final String category;
   final VoidCallback onTap;
-  final Map<String, Map<String, dynamic>> categoryEmojis = {
-    'Oil Seals': {'icon': Icons.circle, 'emoji': '🔵'},
-    'Monoseals': {'icon': Icons.radio_button_checked, 'emoji': '⭕'},
-    'Wiper Seals': {'icon': Icons.blur_on, 'emoji': '🌊'},
-    'Wipermono': {'icon': Icons.grain, 'emoji': '🎯'},
+  final Map<String, String> categoryEmojis = {
+    'Oil Seals': '🛢️',
+    'Monoseals': '⭕',
+    'Wiper Seals': '🌀',
+    'Wipermono': '🛟',
   };
 
   CategoryCard({
@@ -19,32 +19,32 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final emojiData = categoryEmojis[category] ?? {
-      'icon': Icons.category,
-      'emoji': '📦'
-    };
-    final icon = emojiData['icon'] as IconData;
-    final emoji = emojiData['emoji'] as String;
+    final emoji = categoryEmojis[category] ?? '📦';
 
     return Material(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(16),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
             border: Border(
               top: BorderSide(
-                color: const Color(0xFFE53935),
+                color: Color(0xFFE53935),
                 width: 3,
               ),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black,
                 blurRadius: 8,
-                offset: const Offset(0, 4),
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -54,12 +54,6 @@ class CategoryCard extends StatelessWidget {
               Text(
                 emoji,
                 style: const TextStyle(fontSize: 48),
-              ),
-              const SizedBox(height: 12),
-              Icon(
-                icon,
-                size: 32,
-                color: const Color(0xFFE53935),
               ),
               const SizedBox(height: 16),
               Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'constants/app_colors.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -16,17 +17,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
+        scaffoldBackgroundColor: AppColors.darkBackground,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE53935),
+          primary: AppColors.primary,
           onPrimary: Colors.white,
-          secondary: Color(0xFFE53935),
-          surface: Color(0xFF1A1A1A),
+          secondary: AppColors.primary,
+          surface: AppColors.surfaceBackground,
           onSurface: Colors.white,
           error: Color(0xFFFF5252),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1A1A1A),
+          backgroundColor: AppColors.darkBackground,
           foregroundColor: Colors.white,
           elevation: 0,
           titleTextStyle: TextStyle(
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE53935),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
@@ -51,10 +52,10 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF1A1A1A),
+          fillColor: AppColors.surfaceBackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE53935)),
+            borderSide: const BorderSide(color: AppColors.primary),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -62,32 +63,32 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE53935), width: 2),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
           labelStyle: const TextStyle(color: Colors.white),
         ),
         cardTheme: CardThemeData(
-          color: const Color(0xFF1A1A1A),
+          color: AppColors.surfaceBackground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 4,
         ),
         listTileTheme: ListTileThemeData(
-          tileColor: const Color(0xFF1A1A1A),
+          tileColor: AppColors.surfaceBackground,
           textColor: Colors.white,
-          iconColor: const Color(0xFFE53935),
+          iconColor: AppColors.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
         snackBarTheme: const SnackBarThemeData(
-          backgroundColor: Color(0xFF1A1A1A),
+          backgroundColor: AppColors.surfaceBackground,
           contentTextStyle: TextStyle(color: Colors.white),
         ),
         dialogTheme: const DialogThemeData(
-          backgroundColor: Color(0xFF1A1A1A),
+          backgroundColor: AppColors.surfaceBackground,
           titleTextStyle: TextStyle(
             color: Colors.white,
             fontSize: 18,
